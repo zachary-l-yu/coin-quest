@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Quest — Money Tracker</title>
+<meta name="description" content="A modern money tracker for teens with light gamification — log spending, set savings goals, and track income projections.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">CQ</span>
+    <h1>Coin Quest</h1>
+  </div>
+  <div class="player-card">
+    <div class="level-ring" id="levelRing" style="--xp-pct:0">
+      <div class="level-ring-inner"><span id="levelNumber">1</span></div>
+    </div>
+    <div class="player-meta">
+      <span class="level-caption">Level</span>
+      <span class="streak-chip" id="streakLabel">0 day streak</span>
+    </div>
+    <button id="muteBtn" class="icon-btn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="col col-left">
+    <div class="panel">
+      <h2 class="panel-title">Add Transaction</h2>
+      <form id="txForm" class="tx-form">
+        <div class="type-toggle" role="radiogroup" aria-label="Transaction type">
+          <button type="button" class="type-btn active" data-type="expense" id="btnExpense">Spend</button>
+          <button type="button" class="type-btn" data-type="income" id="btnIncome">Earn</button>
+        </div>
+        <label class="field">
+          <span>Amount</span>
+          <input type="number" id="txAmount" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" required>
+        </label>
+        <label class="field">
+          <span>Category</span>
+          <select id="txCategory" required></select>
+        </label>
+        <label class="field">
+          <span>Note (optional)</span>
+          <input type="text" id="txNote" maxlength="40" placeholder="What was it for?">
+        </label>
+        <button type="submit" class="btn-primary">Add Transaction</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Weekly Income</h2>
+      <p class="panel-sub">Enter what you typically earn per week to see your monthly and yearly outlook.</p>
+      <form id="incomeForm" class="income-form">
+        <label class="field">
+          <span>Amount per week</span>
+          <input type="number" id="weeklyIncomeInput" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+        </label>
+        <button type="submit" class="btn-secondary">Save</button>
+      </form>
+      <div class="income-projection">
+        <div class="proj-row"><span>Weekly</span><span id="projWeekly">$0.00</span></div>
+        <div class="proj-row"><span>Monthly</span><span id="projMonthly">$0.00</span></div>
+        <div class="proj-row"><span>Yearly</span><span id="projYearly">$0.00</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="col col-center">
+    <div class="panel balance-panel">
+      <span class="panel-title">Your Balance</span>
+      <div class="balance-amount" id="balanceAmount">$0.00</div>
+      <div class="balance-sub" id="balanceSub">Every logged transaction updates this automatically</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Spending Breakdown</h2>
+      <div id="spendChart" class="spend-chart"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Recent Activity</h2>
+      <ul id="txList" class="tx-list"></ul>
+    </div>
+  </section>
+
+  <section class="col col-right">
+    <div class="panel">
+      <h2 class="panel-title">Weekly Budgets</h2>
+      <div id="budgetList" class="budget-list"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Savings Goals</h2>
+      <div id="goalsList" class="goals-list"></div>
+      <button id="newGoalBtn" class="btn-secondary">+ New Goal</button>
+    </div>
+  </section>
+</main>
+
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+<dialog id="goalDialog">
+  <form id="goalForm" method="dialog" class="goal-form">
+    <h2 class="panel-title">New Savings Goal</h2>
+    <label class="field">
+      <span>Goal name</span>
+      <input type="text" id="goalName" maxlength="24" required placeholder="New headphones">
+    </label>
+    <label class="field">
+      <span>Target amount</span>
+      <input type="number" id="goalTarget" min="1" step="0.01" required placeholder="50.00">
+    </label>
+    <label class="field">
+      <span>Icon</span>
+      <select id="goalIcon">
+        <option value="🎧">🎧 Headphones</option>
+        <option value="👟">👟 Shoes</option>
+        <option value="🎮">🎮 Game</option>
+        <option value="📱">📱 Phone</option>
+        <option value="🚲">🚲 Bike</option>
+        <option value="✈️">✈️ Trip</option>
+        <option value="🎸">🎸 Instrument</option>
+        <option value="⭐">⭐ Other</option>
+      </select>
+    </label>
+    <div class="dialog-actions">
+      <button type="button" id="cancelGoalBtn" class="btn-secondary">Cancel</button>
+      <button type="submit" class="btn-primary">Create Goal</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="allocateDialog">
+  <form id="allocateForm" method="dialog" class="goal-form">
+    <h2 class="panel-title" id="allocateTitle">Add Money to Goal</h2>
+    <label class="field">
+      <span>Amount to add</span>
+      <input type="number" id="allocateAmount" min="0.01" step="0.01" required placeholder="10.00">
+    </label>
+    <div class="dialog-actions">
+      <button type="button" id="cancelAllocateBtn" class="btn-secondary">Cancel</button>
+      <button type="submit" class="btn-primary">Add Funds</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
